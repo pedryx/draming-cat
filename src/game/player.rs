@@ -2,18 +2,27 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 use std::f32::consts::PI;
 
-use crate::{PausableSystems, game::{DestroyOnNewLevel, NewLevel, animation::SpriteAnimation}, screens::Screen};
+use crate::{
+    PausableSystems,
+    game::{DestroyOnNewLevel, NewLevel, animation::SpriteAnimation},
+    screens::Screen,
+};
 
 const PLAYER_SCALE: f32 = 2.0;
 const PLAYER_Z: f32 = 100.0;
-const PLAYER_SPEED: f32 = 1024.0;
+const PLAYER_MOVEMENT_SPEED: f32 = 1024.0;
+const PLAYER_ROTATION_SPEED: f32 = 8.0;
 
 pub fn plugin(app: &mut App) {
     app.add_observer(spawn_player)
+        .add_systems(PreUpdate, read_keyboard_input)
         .add_systems(
             Update,
-            handle_movement
-                .run_if(in_state(Screen::Gameplay))
+            (
+                apply_linear_velocity,
+                apply_angular_velocity,
+                update_animation,
+            )
                 .in_set(PausableSystems),
         )
         .add_systems(
@@ -24,8 +33,10 @@ pub fn plugin(app: &mut App) {
         );
 }
 
-#[derive(Component)]
-pub struct Player;
+#[derive(Component, Default)]
+pub struct Player {
+    movement_direction: Vec2,
+}
 
 fn spawn_player(
     _: On<NewLevel>,
@@ -38,7 +49,7 @@ fn spawn_player(
 
     commands.spawn((
         Name::new("player"),
-        Player,
+        Player::default(),
         Sprite::from_atlas_image(
             asset_server.load("images/player_cat.png"),
             TextureAtlas { layout, index: 0 },
@@ -59,20 +70,7 @@ fn update_follow_camera(
     camera.translation = player.translation.with_z(camera.translation.z);
 }
 
-fn handle_movement(
-    keyboard: Res<ButtonInput<KeyCode>>,
-    player: Single<
-        (
-            &Transform,
-            &mut LinearVelocity,
-            &mut AngularVelocity,
-            &mut SpriteAnimation,
-        ),
-        With<Player>,
-    >,
-) {
-    let (transform, mut linear, mut angular, mut animation) = player.into_inner();
-
+fn read_keyboard_input(keyboard: Res<ButtonInput<KeyCode>>, mut player: Single<&mut Player>) {
     let mut direction = Vec2::ZERO;
     if keyboard.pressed(KeyCode::KeyW) {
         direction.y += 1.0;
@@ -86,26 +84,33 @@ fn handle_movement(
     if keyboard.pressed(KeyCode::KeyD) {
         direction.x += 1.0;
     }
-    let direction = direction.normalize_or_zero();
 
-    linear.0 = direction * PLAYER_SPEED;
+    player.movement_direction = direction.normalize_or_zero();
+}
 
-    if direction != Vec2::ZERO {
-        let target_rotation = direction.to_angle() - PI / 2.0;
-        let current_rotation = transform.rotation.to_euler(EulerRot::XYZ).2;
+fn apply_linear_velocity(player: Single<(&Player, &mut LinearVelocity)>) {
+    let (player, mut velocity) = player.into_inner();
 
-        let mut delta = target_rotation - current_rotation;
-        if delta > PI {
-            delta -= 2.0 * PI;
-        } else if delta < -PI {
-            delta += 2.0 * PI;
-        }
+    velocity.0 = player.movement_direction * PLAYER_MOVEMENT_SPEED;
+}
 
-        angular.0 = delta * 10.0;
+fn apply_angular_velocity(player: Single<(&Player, &Transform, &mut AngularVelocity)>) {
+    let (player, transform, mut velocity) = player.into_inner();
 
-        animation.paused = false;
-    } else {
-        angular.0 = 0.0;
-        animation.paused = true;
+    if player.movement_direction == Vec2::ZERO {
+        velocity.0 = 0.0;
+        return;
     }
+
+    let target_rotation = player.movement_direction.to_angle() - PI / 2.0;
+    let current_rotation = transform.rotation.to_euler(EulerRot::XYZ).2;
+
+    let delta = (target_rotation - current_rotation + PI).rem_euclid(2.0 * PI) - PI;
+    velocity.0 = delta * PLAYER_ROTATION_SPEED;
+}
+
+fn update_animation(player: Single<(&Player, &mut SpriteAnimation)>) {
+    let (player, mut animation) = player.into_inner();
+
+    animation.paused = player.movement_direction == Vec2::ZERO;
 }
