@@ -2,6 +2,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
+    audio::sound_effect_volume,
     game::{DestroyOnNewLevel, LevelNumber, NewLevel, environment::ROAD_SIZE, player::Player},
     screens::Screen,
 };
@@ -35,6 +36,7 @@ fn spawn_goal(_: On<NewLevel>, mut commands: Commands, asset_server: Res<AssetSe
 fn on_player_reaches_goal(
     event: On<CollisionStart>,
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut level_number: ResMut<LevelNumber>,
     player: Single<Entity, With<Player>>,
 ) {
@@ -43,5 +45,9 @@ fn on_player_reaches_goal(
     }
 
     level_number.0 += 1;
+    commands.spawn(sound_effect_volume(
+        asset_server.load("audio/sound_effects/goal_reached.wav"),
+        0.5,
+    ));
     commands.trigger(NewLevel(level_number.0));
 }

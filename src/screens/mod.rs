@@ -26,4 +26,5 @@ pub enum Screen {
     #[default]
     Loading,
     Gameplay,
+    Victory,
 }

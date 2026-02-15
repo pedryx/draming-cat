@@ -12,7 +12,7 @@ use crate::{
 
 const PLAYER_SCALE: f32 = 2.0;
 const PLAYER_Z: f32 = 100.0;
-const PLAYER_MOVEMENT_SPEED: f32 = 1000.0;
+const PLAYER_MOVEMENT_SPEED: f32 = 600.0;
 const PLAYER_ROTATION_SPEED: f32 = 8.0;
 const PLAYER_WALK_SOUND_PERIOD: f32 = 0.25;
 
@@ -41,6 +41,7 @@ pub fn plugin(app: &mut App) {
 pub struct Player {
     movement_direction: Vec2,
     walking_sound_timer: Timer,
+    pub disable_movement: bool,
 }
 
 impl Default for Player {
@@ -51,6 +52,7 @@ impl Default for Player {
                 PLAYER_WALK_SOUND_PERIOD,
                 TimerMode::Repeating,
             ),
+            disable_movement: false,
         }
     }
 }
@@ -88,6 +90,11 @@ fn update_follow_camera(
 }
 
 fn read_keyboard_input(keyboard: Res<ButtonInput<KeyCode>>, mut player: Single<&mut Player>) {
+    if player.disable_movement {
+        player.movement_direction = Vec2::ZERO;
+        return;
+    }
+
     let mut direction = Vec2::ZERO;
     if keyboard.pressed(KeyCode::KeyW) {
         direction.y += 1.0;

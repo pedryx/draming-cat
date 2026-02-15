@@ -15,6 +15,8 @@ mod theme;
 use avian2d::PhysicsPlugins;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
+use crate::game::glitch_effect::GlitchEffect;
+
 fn main() -> AppExit {
     App::new().add_plugins(AppPlugin).run()
 }
@@ -100,5 +102,9 @@ struct Pause(pub bool);
 struct PausableSystems;
 
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn((Name::new("Camera"), Camera2d));
+    commands.spawn((
+        Name::new("Camera"),
+        Camera2d,
+        GlitchEffect::default(),
+    ));
 }

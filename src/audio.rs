@@ -33,6 +33,14 @@ pub fn sound_effect(handle: Handle<AudioSource>) -> impl Bundle {
     (AudioPlayer(handle), PlaybackSettings::DESPAWN, SoundEffect)
 }
 
+pub fn sound_effect_volume(handle: Handle<AudioSource>, volume: f32) -> impl Bundle {
+    (
+        AudioPlayer(handle),
+        PlaybackSettings::DESPAWN.with_volume(Volume::Linear(volume)),
+        SoundEffect,
+    )
+}
+
 pub fn sound_effect_complex(handle: Handle<AudioSource>, volume: f32, speed: f32) -> impl Bundle {
     (
         AudioPlayer(handle),
