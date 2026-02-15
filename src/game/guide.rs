@@ -3,11 +3,15 @@ use bevy::prelude::*;
 use crate::screens::Screen;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(OnEnter(Screen::Gameplay), spawn_guide);
+    app.add_systems(OnEnter(Screen::Gameplay), spawn_guide)
+        .add_observer(change_text);
 }
 
 #[derive(Component)]
-pub struct GuideText;
+struct GuideText;
+
+#[derive(Event)]
+pub struct ChangeGuideText(pub String);
 
 fn spawn_guide(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
@@ -27,17 +31,17 @@ fn spawn_guide(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .with_children(|parent| {
             parent.spawn((
-                Text::new("You're the red dot. Move with your mouse."),
+                Text::new("You are a cat, your goal is to reach your bed."),
                 TextFont {
-                    font: asset_server.load("fonts/Super Vanilla.ttf"),
+                    font: asset_server.load("fonts/CantedFX Bold.otf"),
                     font_size: 40.0,
                     ..default()
                 },
-                TextColor(Color::linear_rgb(0.4, 0.4, 0.4)),
+                TextColor(Color::linear_rgb(1.0, 1.0, 1.0)),
                 TextLayout::new_with_justify(Justify::Center),
                 Node {
                     position_type: PositionType::Relative,
-                    top: Val::Vh(20.0),
+                    top: Val::Vh(5.0),
                     ..default()
                 },
                 GuideText,
@@ -47,4 +51,8 @@ fn spawn_guide(mut commands: Commands, asset_server: Res<AssetServer>) {
                 },
             ));
         });
+}
+
+fn change_text(event: On<ChangeGuideText>, mut guide: Single<&mut Text, With<GuideText>>) {
+    guide.0 = event.0.clone();
 }

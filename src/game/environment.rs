@@ -18,6 +18,7 @@ const WALL_THICKNESS: f32 = 4096.0;
 const STONE_COUNT: usize = 200;
 const STONE_SCALE: f32 = 2.0;
 const STONE_Z: f32 = -50.0;
+const MOVE_HINT_Z: f32 = -75.0;
 
 pub fn plugin(app: &mut App) {
     app.add_observer(spawn_road).add_observer(spawn_walls);
@@ -41,6 +42,14 @@ fn spawn_road(
         DestroyOnNewLevel,
         DespawnOnExit(Screen::Gameplay),
     ));
+
+    commands.spawn((
+            Name::new("move hint"),
+            DestroyOnNewLevel,
+            DespawnOnExit(Screen::Gameplay),
+            Sprite::from_image(asset_server.load("images/move_hint.png")),
+            Transform::from_xyz(0.0, 500.0, MOVE_HINT_Z),
+        ));
 
     for _ in 0..STONE_COUNT {
         let stone_index = random_source.0.random_range(1..=3);

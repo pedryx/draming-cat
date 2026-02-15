@@ -1,17 +1,20 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
+use rand::Rng;
 use std::f32::consts::PI;
 
 use crate::{
     PausableSystems,
-    game::{DestroyOnNewLevel, NewLevel, animation::SpriteAnimation},
+    audio::sound_effect_complex,
+    game::{DestroyOnNewLevel, NewLevel, RandomSource, animation::SpriteAnimation},
     screens::Screen,
 };
 
 const PLAYER_SCALE: f32 = 2.0;
 const PLAYER_Z: f32 = 100.0;
-const PLAYER_MOVEMENT_SPEED: f32 = 1024.0;
+const PLAYER_MOVEMENT_SPEED: f32 = 1000.0;
 const PLAYER_ROTATION_SPEED: f32 = 8.0;
+const PLAYER_WALK_SOUND_PERIOD: f32 = 0.25;
 
 pub fn plugin(app: &mut App) {
     app.add_observer(spawn_player)
@@ -22,6 +25,7 @@ pub fn plugin(app: &mut App) {
                 apply_linear_velocity,
                 apply_angular_velocity,
                 update_animation,
+                play_walking_sound,
             )
                 .in_set(PausableSystems),
         )
@@ -33,9 +37,22 @@ pub fn plugin(app: &mut App) {
         );
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
 pub struct Player {
     movement_direction: Vec2,
+    walking_sound_timer: Timer,
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Self {
+            movement_direction: Vec2::ZERO,
+            walking_sound_timer: Timer::from_seconds(
+                PLAYER_WALK_SOUND_PERIOD,
+                TimerMode::Repeating,
+            ),
+        }
+    }
 }
 
 fn spawn_player(
@@ -57,7 +74,7 @@ fn spawn_player(
         SpriteAnimation::new(6.0, true),
         RigidBody::Dynamic,
         Collider::capsule(7.5, 35.0),
-        Transform::from_xyz(0.0, 80.0, PLAYER_Z).with_scale(Vec3::splat(PLAYER_SCALE)),
+        Transform::from_xyz(0.0, 300.0, PLAYER_Z).with_scale(Vec3::splat(PLAYER_SCALE)),
         DestroyOnNewLevel,
         DespawnOnExit(Screen::Gameplay),
     ));
@@ -113,4 +130,27 @@ fn update_animation(player: Single<(&Player, &mut SpriteAnimation)>) {
     let (player, mut animation) = player.into_inner();
 
     animation.paused = player.movement_direction == Vec2::ZERO;
+}
+
+fn play_walking_sound(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    time: Res<Time>,
+    mut random_source: ResMut<RandomSource>,
+    mut player: Single<&mut Player>,
+) {
+    if player.movement_direction == Vec2::ZERO {
+        return;
+    }
+
+    player.walking_sound_timer.tick(time.delta());
+    if !player.walking_sound_timer.just_finished() {
+        return;
+    }
+
+    let volume = random_source.0.random_range(0.12..=0.3);
+    let speed = random_source.0.random_range(0.25..=2.0);
+
+    let handle = asset_server.load("audio/sound_effects/steps.wav");
+    commands.spawn(sound_effect_complex(handle, volume, speed));
 }

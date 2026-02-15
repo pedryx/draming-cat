@@ -6,7 +6,7 @@ edition = "2024"
 
 [dependencies]
 avian2d = "0.5.0"
-bevy = { version = "0.18" }
+bevy = { version = "0.18", features = ["wav"]}
 bevy_ecs_tilemap = "0.18.1"
 itertools = "0.14.0"
 rand = "0.9.0"

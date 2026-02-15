@@ -1,0 +1,3 @@
+font Canted FX Bold by Nils Cordes, CC BY-SA 4.0, https://www.dafont.com/canted-fx.font
+
+image Bevy logo, All rights reserved by the Bevy Foundation, permission granted for splash screen use when unmodified.

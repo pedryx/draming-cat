@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 
-use crate::screens::Screen;
+use crate::{game::guide::ChangeGuideText, screens::Screen};
 
 mod animation;
 mod environment;
 mod goal;
+mod guide;
 mod player;
 
 const RANDOM_SOURCE_SEED: u64 = 0xDEAD_C0DE;
@@ -14,8 +15,9 @@ pub fn plugin(app: &mut App) {
     app.add_plugins((
         animation::plugin,
         environment::plugin,
-        player::plugin,
         goal::plugin,
+        guide::plugin,
+        player::plugin,
     ))
     .init_resource::<LevelNumber>()
     .insert_resource(RandomSource(SmallRng::seed_from_u64(RANDOM_SOURCE_SEED)))
@@ -38,9 +40,7 @@ pub struct RandomSource(pub SmallRng);
 #[derive(Component)]
 pub struct DestroyOnNewLevel;
 
-fn trigger_first_level(
-    mut commands: Commands,
-) {
+fn trigger_first_level(mut commands: Commands) {
     commands.trigger(NewLevel(0));
 }
 
