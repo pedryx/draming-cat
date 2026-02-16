@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 
-use crate::{game::{glitch_effect::SpawnGlitchEffect, guide::ChangeGuideText}, screens::Screen};
+use crate::{
+    game::{glitch_effect::SpawnGlitchEffect, guide::ChangeGuideText},
+    screens::Screen,
+};
 
 mod animation;
 mod arrows;
@@ -10,8 +13,9 @@ pub mod glitch_effect;
 mod goal;
 mod guide;
 mod player;
+mod wall_block;
 
-const WAKE_UP_LEVEL: usize = 2;
+const WAKE_UP_LEVEL: usize = 3;
 const RANDOM_SOURCE_SEED: u64 = 0xDEAD_C0DE;
 
 pub fn plugin(app: &mut App) {
@@ -23,6 +27,7 @@ pub fn plugin(app: &mut App) {
         player::plugin,
         glitch_effect::plugin,
         arrows::plugin,
+        wall_block::plugin,
     ))
     .init_resource::<LevelNumber>()
     .insert_resource(RandomSource(SmallRng::seed_from_u64(RANDOM_SOURCE_SEED)))
@@ -66,12 +71,19 @@ fn on_new_level(
 ) {
     if new_level.0 == WAKE_UP_LEVEL {
         screen.set(Screen::Victory);
+        return;
     }
 
     if new_level.0 > 0 {
         commands.trigger(SpawnGlitchEffect);
     }
-    commands.trigger(ChangeGuideText(String::from("You are a cat, your goal is to reach your bed.")));
+
+    let text = if new_level.0 >= 2 {
+        "You are a bed, your goal is to reach your cat."
+    } else {
+        "You are a cat, your goal is to reach your bed."
+    };
+    commands.trigger(ChangeGuideText(String::from(text)));
 
     for entity in query {
         commands.entity(entity).despawn();

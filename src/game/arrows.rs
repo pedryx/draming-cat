@@ -6,14 +6,13 @@ use crate::{
     PausableSystems,
     audio::sound_effect_volume,
     game::{
-        DestroyOnNewLevel, LevelRestart, NewLevel, RandomSource, environment::ROAD_SIZE,
-        guide::ChangeGuideText, player::Player,
+        DestroyOnNewLevel, LevelNumber, LevelRestart, NewLevel, RandomSource, environment::ROAD_SIZE, guide::ChangeGuideText, player::Player
     },
     screens::Screen,
 };
 
 const SPAWN_Y_START: f32 = ROAD_SIZE.y / 3.0;
-const SPAWN_Y_END: f32 = ROAD_SIZE.y - 200.0;
+const SPAWN_Y_END: f32 = ROAD_SIZE.y - 400.0;
 const ARROW_Z: f32 = 150.0;
 const ARROW_SPEED: f32 = 400.0;
 
@@ -60,11 +59,24 @@ fn handle_arrow_spawning(
     _: Single<&ArrowSpawner>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    level_number: Res<LevelNumber>,
     mut random_source: ResMut<RandomSource>,
 ) {
     if !random_source.0.random_bool(0.05) {
         return;
     }
+
+    let handle = if level_number.0 >= 2 {
+        asset_server.load("images/toast.png")
+    } else {
+        asset_server.load("images/arrow.png")
+    };
+
+    let collider = if level_number.0 >= 2 {
+        Collider::rectangle(21.0, 21.0)
+    } else {
+        Collider::rectangle(32.0, 5.0)
+    };
 
     commands
         .spawn((
@@ -72,8 +84,8 @@ fn handle_arrow_spawning(
             DestroyOnNewLevel,
             DespawnOnExit(Screen::Gameplay),
             Arrow,
-            Sprite::from_image(asset_server.load("images/arrow.png")),
-            Collider::rectangle(32.0, 5.0),
+            Sprite::from_image(handle),
+            collider,
             Sensor,
             RigidBody::Kinematic,
             LinearVelocity(Vec2::NEG_X * ARROW_SPEED),
@@ -116,11 +128,18 @@ fn on_player_hit(
 fn on_player_in_arrow_area(
     event: On<CollisionStart>,
     mut commands: Commands,
+    level_number: Res<LevelNumber>,
     player: Single<Entity, With<Player>>,
 ) {
-    if event.collider1 != *player && event.collider2 != *player {
+    if event.collider1 == *player && event.collider2 != *player {
         return;
     }
+    commands.entity(event.observer()).despawn();
 
-    commands.trigger(ChangeGuideText(String::from("Oh no, avoid the arrows.")));
+    let text = if level_number.0 >= 2 {
+        "Oh no, avoid the toasts."
+    } else {
+        "Oh no, avoid the arrows."
+    };
+    commands.trigger(ChangeGuideText(String::from(text)));
 }

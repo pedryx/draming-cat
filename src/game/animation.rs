@@ -10,22 +10,20 @@ pub fn plugin(app: &mut App) {
 pub struct SpriteAnimation {
     timer: Timer,
     pub paused: bool,
+    pub frame_count: usize,
 }
 
 impl SpriteAnimation {
-    pub fn new(fps: f32, paused: bool) -> Self {
+    pub fn new(fps: f32, paused: bool, frame_count: usize) -> Self {
         Self {
             timer: Timer::from_seconds(1.0 / fps, TimerMode::Repeating),
             paused,
+            frame_count,
         }
     }
 }
 
-fn update_animations(
-    time: Res<Time>,
-    layouts: Res<Assets<TextureAtlasLayout>>,
-    query: Query<(&mut SpriteAnimation, &mut Sprite)>,
-) {
+fn update_animations(time: Res<Time>, query: Query<(&mut SpriteAnimation, &mut Sprite)>) {
     for (mut animation, mut sprite) in query {
         if animation.paused {
             continue;
@@ -37,8 +35,7 @@ fn update_animations(
             let atlas = sprite.texture_atlas.as_mut().unwrap();
             atlas.index += 1;
 
-            let layout = layouts.get(&atlas.layout).unwrap();
-            if atlas.index >= layout.textures.len() {
+            if atlas.index >= animation.frame_count {
                 atlas.index = 0;
             }
         }

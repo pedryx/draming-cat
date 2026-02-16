@@ -12,7 +12,7 @@ use crate::{
 pub const ROAD_SIZE: Vec2 = Vec2::new(1200.0, 8192.0);
 const ROAD_Z: f32 = -100.0;
 
-const WALL_Z: f32 = 200.0;
+pub const WALL_Z: f32 = 200.0;
 const WALL_THICKNESS: f32 = 4096.0;
 
 const STONE_COUNT: usize = 200;

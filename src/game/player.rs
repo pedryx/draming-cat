@@ -58,7 +58,7 @@ impl Default for Player {
 }
 
 fn spawn_player(
-    _: On<NewLevel>,
+    new_level: On<NewLevel>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
@@ -66,16 +66,29 @@ fn spawn_player(
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 4, 1, None, None);
     let layout = layouts.add(layout);
 
+    let handle = if new_level.0 >= 2 {
+        asset_server.load("images/cat_bed.png")
+    } else {
+        asset_server.load("images/player_cat.png")
+    };
+    let collider = if new_level.0 >= 2 {
+        Collider::circle(20.0)
+    } else {
+        Collider::capsule(7.5, 35.0)
+    };
+    let frame_count = if new_level.0 >= 2 {
+        1
+    } else {
+        4
+    };
+
     commands.spawn((
         Name::new("player"),
         Player::default(),
-        Sprite::from_atlas_image(
-            asset_server.load("images/player_cat.png"),
-            TextureAtlas { layout, index: 0 },
-        ),
-        SpriteAnimation::new(6.0, true),
+        Sprite::from_atlas_image(handle, TextureAtlas { layout, index: 0 }),
+        SpriteAnimation::new(6.0, true, frame_count),
         RigidBody::Dynamic,
-        Collider::capsule(7.5, 35.0),
+        collider,
         Transform::from_xyz(0.0, 300.0, PLAYER_Z).with_scale(Vec3::splat(PLAYER_SCALE)),
         DestroyOnNewLevel,
         DespawnOnExit(Screen::Gameplay),
