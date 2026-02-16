@@ -52,7 +52,7 @@ fn spawn_road(
         ));
 
     for _ in 0..STONE_COUNT {
-        let stone_index = random_source.0.random_range(1..=3);
+        let stone_index = random_source.0.random_range(0..3);
         let image = assets.stones[stone_index].clone();
 
         let position = road_rectangle.sample_interior(&mut random_source.0);
