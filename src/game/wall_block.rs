@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 use crate::{
     game::{
-        DestroyOnNewLevel, NewLevel,
+        AllAssets, DestroyOnNewLevel, NewLevel,
         environment::{ROAD_SIZE, WALL_Z},
         guide::ChangeGuideText,
         player::Player,
@@ -24,7 +24,7 @@ struct Key;
 fn spawn(
     new_level: On<NewLevel>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
@@ -49,7 +49,7 @@ fn spawn(
         Name::new("door"),
         DestroyOnNewLevel,
         DespawnOnExit(Screen::Gameplay),
-        Sprite::from_image(asset_server.load("images/door.png")),
+        Sprite::from_image(assets.door.clone()),
         Transform::from_xyz(0.0, ROAD_SIZE.y - 300.0, WALL_Z)
             .with_scale(Vec2::splat(2.0).extend(1.0)),
         WallBlock,
@@ -71,7 +71,7 @@ fn spawn(
 fn on_player_enters_trigger(
     event: On<CollisionStart>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     player: Single<Entity, With<Player>>,
 ) {
     if event.collider1 != *player && event.collider2 != *player {
@@ -88,7 +88,7 @@ fn on_player_enters_trigger(
             Name::new("key"),
             DestroyOnNewLevel,
             DespawnOnExit(Screen::Gameplay),
-            Sprite::from_image(asset_server.load("images/key.png")),
+            Sprite::from_image(assets.key.clone()),
             Transform::from_xyz(0.0, 300.0, 75.0).with_scale(Vec2::splat(2.0).extend(1.0)),
             Collider::circle(64.0),
             RigidBody::Static,

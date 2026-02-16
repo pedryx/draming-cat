@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 
 use crate::{
+    asset_tracking::LoadResource,
     game::{glitch_effect::SpawnGlitchEffect, guide::ChangeGuideText},
     screens::Screen,
 };
@@ -33,7 +34,55 @@ pub fn plugin(app: &mut App) {
     .insert_resource(RandomSource(SmallRng::seed_from_u64(RANDOM_SOURCE_SEED)))
     .add_systems(OnEnter(Screen::Gameplay), trigger_first_level)
     .add_observer(on_new_level)
-    .add_observer(trigger_new_level_on_restart);
+    .add_observer(trigger_new_level_on_restart)
+    .load_resource::<AllAssets>();
+}
+
+#[derive(Resource, Asset, Clone, Reflect)]
+#[reflect(Resource)]
+pub struct AllAssets {
+    #[dependency]
+    pub move_hint: Handle<Image>,
+    pub stones: [Handle<Image>; 3],
+    pub toast: Handle<Image>,
+    pub arrow: Handle<Image>,
+    pub cat: Handle<Image>,
+    pub cat_bed: Handle<Image>,
+    pub door: Handle<Image>,
+    pub key: Handle<Image>,
+
+    pub cat_hurt: Handle<AudioSource>,
+    pub goal_reached: Handle<AudioSource>,
+    pub steps: Handle<AudioSource>,
+
+    pub catex_fx_bold: Handle<Font>,
+}
+
+impl FromWorld for AllAssets {
+    fn from_world(world: &mut World) -> Self {
+        let assets = world.resource::<AssetServer>();
+
+        Self {
+            move_hint: assets.load("images/move_hint.png"),
+            stones: [
+                assets.load("images/stone1.png"),
+                assets.load("images/stone1.png"),
+                assets.load("images/stone1.png"),
+            ],
+            toast: assets.load("images/toast.png"),
+            arrow: assets.load("images/arrow.png"),
+            cat: assets.load("images/player_cat.png"),
+            cat_bed: assets.load("images/cat_bed.png"),
+            door: assets.load("images/door.png"),
+            key: assets.load("images/key.png"),
+
+            cat_hurt: assets.load("audio/sound_effects/cat_hurt.wav"),
+            goal_reached: assets.load("audio/sound_effects/goal_reached.wav"),
+            steps: assets.load("audio/sound_effects/steps.wav"),
+
+            catex_fx_bold: assets.load("fonts/CantedFX Bold.otf"),
+        }
+    }
 }
 
 #[derive(Event)]

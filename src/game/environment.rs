@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    game::{DestroyOnNewLevel, NewLevel, RandomSource},
+    game::{AllAssets, DestroyOnNewLevel, NewLevel, RandomSource},
     screens::Screen,
 };
 
@@ -27,7 +27,7 @@ pub fn plugin(app: &mut App) {
 fn spawn_road(
     _: On<NewLevel>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     mut random_source: ResMut<RandomSource>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -47,13 +47,13 @@ fn spawn_road(
             Name::new("move hint"),
             DestroyOnNewLevel,
             DespawnOnExit(Screen::Gameplay),
-            Sprite::from_image(asset_server.load("images/move_hint.png")),
+            Sprite::from_image(assets.move_hint.clone()),
             Transform::from_xyz(0.0, 500.0, MOVE_HINT_Z),
         ));
 
     for _ in 0..STONE_COUNT {
         let stone_index = random_source.0.random_range(1..=3);
-        let image = asset_server.load(format!("images/stone{stone_index}.png"));
+        let image = assets.stones[stone_index].clone();
 
         let position = road_rectangle.sample_interior(&mut random_source.0);
         let rotation = random_source.0.random_range(0.0..2.0 * PI);

@@ -6,7 +6,7 @@ use std::f32::consts::PI;
 use crate::{
     PausableSystems,
     audio::sound_effect_complex,
-    game::{DestroyOnNewLevel, NewLevel, RandomSource, animation::SpriteAnimation},
+    game::{AllAssets, DestroyOnNewLevel, NewLevel, RandomSource, animation::SpriteAnimation},
     screens::Screen,
 };
 
@@ -60,27 +60,23 @@ impl Default for Player {
 fn spawn_player(
     new_level: On<NewLevel>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 4, 1, None, None);
     let layout = layouts.add(layout);
 
     let handle = if new_level.0 >= 2 {
-        asset_server.load("images/cat_bed.png")
+        assets.cat_bed.clone()
     } else {
-        asset_server.load("images/player_cat.png")
+        assets.cat.clone()
     };
     let collider = if new_level.0 >= 2 {
         Collider::circle(20.0)
     } else {
         Collider::capsule(7.5, 35.0)
     };
-    let frame_count = if new_level.0 >= 2 {
-        1
-    } else {
-        4
-    };
+    let frame_count = if new_level.0 >= 2 { 1 } else { 4 };
 
     commands.spawn((
         Name::new("player"),
@@ -154,7 +150,7 @@ fn update_animation(player: Single<(&Player, &mut SpriteAnimation)>) {
 
 fn play_walking_sound(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     time: Res<Time>,
     mut random_source: ResMut<RandomSource>,
     mut player: Single<&mut Player>,
@@ -171,6 +167,6 @@ fn play_walking_sound(
     let volume = random_source.0.random_range(0.12..=0.3);
     let speed = random_source.0.random_range(0.25..=2.0);
 
-    let handle = asset_server.load("audio/sound_effects/steps.wav");
+    let handle = assets.steps.clone();
     commands.spawn(sound_effect_complex(handle, volume, speed));
 }

@@ -6,7 +6,8 @@ use crate::{
     PausableSystems,
     audio::sound_effect_volume,
     game::{
-        DestroyOnNewLevel, LevelNumber, LevelRestart, NewLevel, RandomSource, environment::ROAD_SIZE, guide::ChangeGuideText, player::Player
+        AllAssets, DestroyOnNewLevel, LevelNumber, LevelRestart, NewLevel, RandomSource,
+        environment::ROAD_SIZE, guide::ChangeGuideText, player::Player,
     },
     screens::Screen,
 };
@@ -58,7 +59,7 @@ fn spawn_arrow_spawner(new_level: On<NewLevel>, mut commands: Commands) {
 fn handle_arrow_spawning(
     _: Single<&ArrowSpawner>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     level_number: Res<LevelNumber>,
     mut random_source: ResMut<RandomSource>,
 ) {
@@ -67,9 +68,9 @@ fn handle_arrow_spawning(
     }
 
     let handle = if level_number.0 >= 2 {
-        asset_server.load("images/toast.png")
+        assets.toast.clone()
     } else {
-        asset_server.load("images/arrow.png")
+        assets.arrow.clone()
     };
 
     let collider = if level_number.0 >= 2 {
@@ -111,17 +112,14 @@ fn destroy_out_of_map(mut commands: Commands, arrows: Query<(Entity, &Transform)
 fn on_player_hit(
     event: On<CollisionStart>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     player: Single<Entity, With<Player>>,
 ) {
     if event.collider2 != *player {
         return;
     }
 
-    commands.spawn(sound_effect_volume(
-        asset_server.load("audio/sound_effects/cat_hurt.wav"),
-        0.4,
-    ));
+    commands.spawn(sound_effect_volume(assets.cat_hurt.clone(), 0.4));
     commands.trigger(LevelRestart);
 }
 

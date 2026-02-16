@@ -3,7 +3,9 @@ use bevy::prelude::*;
 
 use crate::{
     audio::sound_effect_volume,
-    game::{DestroyOnNewLevel, LevelNumber, NewLevel, environment::ROAD_SIZE, player::Player},
+    game::{
+        AllAssets, DestroyOnNewLevel, LevelNumber, NewLevel, environment::ROAD_SIZE, player::Player,
+    },
     screens::Screen,
 };
 
@@ -19,16 +21,16 @@ struct Goal;
 fn spawn_goal(
     new_level: On<NewLevel>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 4, 1, None, None);
     let layout = layouts.add(layout);
 
     let handle = if new_level.0 >= 2 {
-        asset_server.load("images/player_cat.png")
+        assets.cat.clone()
     } else {
-        asset_server.load("images/cat_bed.png")
+        assets.cat_bed.clone()
     };
     let collider = if new_level.0 >= 2 {
         Collider::capsule(7.5, 35.0)
@@ -55,7 +57,7 @@ fn spawn_goal(
 fn on_player_reaches_goal(
     event: On<CollisionStart>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    assets: Res<AllAssets>,
     mut level_number: ResMut<LevelNumber>,
     player: Single<Entity, With<Player>>,
 ) {
@@ -64,9 +66,6 @@ fn on_player_reaches_goal(
     }
 
     level_number.0 += 1;
-    commands.spawn(sound_effect_volume(
-        asset_server.load("audio/sound_effects/goal_reached.wav"),
-        0.5,
-    ));
+    commands.spawn(sound_effect_volume(assets.goal_reached.clone(), 0.5));
     commands.trigger(NewLevel(level_number.0));
 }

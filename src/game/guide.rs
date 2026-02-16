@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::screens::Screen;
+use crate::{game::AllAssets, screens::Screen};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Gameplay), spawn_guide)
@@ -13,7 +13,7 @@ struct GuideText;
 #[derive(Event)]
 pub struct ChangeGuideText(pub String);
 
-fn spawn_guide(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_guide(mut commands: Commands, assets: Res<AllAssets>) {
     commands
         .spawn((
             Node {
@@ -33,7 +33,7 @@ fn spawn_guide(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent.spawn((
                 Text::new("You are a cat, your goal is to reach your bed."),
                 TextFont {
-                    font: asset_server.load("fonts/CantedFX Bold.otf"),
+                    font: assets.catex_fx_bold.clone(),
                     font_size: 40.0,
                     ..default()
                 },
